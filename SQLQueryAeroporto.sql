@@ -226,3 +226,117 @@ SELECT pa.NomeCompleto as NomeCompleto,
 		INNER JOIN Aeroporto AS ao
 			ON ao.Id = vo.IdAeroportoOrigem
 	WHERE ao.Nome LIKE '%Pinto Martins (Fortaleza)%';
+
+-- 16 Para cada voo, mostre o código, a cidade de origem, a cidade de destino e quantos bilhetes foram emitidos, 
+--considerando inclusive voos sem nenhum bilhete (devem aparecer com zero).
+
+-- mostre o codigo / cidade de origem / cidade de destino / quantidade bilhetes
+-- considerando voo SEM bilhetes
+-- agrupar tudo para quantidade dar certo
+
+SELECT vo.CodigoUnico as CodigoUnico,
+	   eo.Cidade as CidadeOrigem,
+	   ed.Cidade as CidadeDestino,
+	   COUNT(em.Id) as QuantidadeBilhetes
+	FROM Voo AS vo
+		LEFT JOIN Embarque AS em
+			ON em.IdVoo = vo.Id
+		LEFT JOIN Aeroporto AS ao
+			ON ao.Id = vo.IdAeroportoOrigem
+		LEFT JOIN Aeroporto AS ad
+			ON ad.Id = vo.IdAeroportoDestino
+		LEFT JOIN Endereco AS eo
+			ON eo.Id = ao.IdEndereco
+		LEFT JOIN Endereco AS ed
+			ON ed.Id = ad.IdEndereco
+	GROUP BY vo.CodigoUnico, eo.Cidade, ed.Cidade;
+
+-- 17 Para cada passageiro que já embarcou em algum voo, mostre o nome e a quantidade de países distintos 
+--que ele já visitou (com base nos países dos aeroportos de destino), 
+-- listando apenas os passageiros que visitaram mais de um país.
+
+-- mostrar nome de paises DISTINTOS / quantida de de paises distintos
+-- condicao: listar apenas os passageiros que visitaram mais de um pais ( > 1)
+
+SELECT DISTINCT pa.NomeCompleto,
+				COUNT(DISTINCT en.Pais) as QuantidadePaises
+	FROM Passageiro AS pa
+		INNER JOIN Embarque AS em
+			ON em.IdPassageiro = pa.Id
+		INNER JOIN Voo AS vo
+			ON vo.Id = em.IdVoo
+		INNER JOIN Aeroporto AS ae
+			ON ae.Id = vo.IdAeroportoDestino
+		INNER JOIN Endereco AS en
+			ON en.Id = ae.IdEndereco
+	GROUP BY pa.NomeCompleto
+	HAVING COUNT(DISTINCT en.Pais) > 1;
+
+-- 18 Liste os pares de passageiros (sem repetição) que embarcaram em um mesmo voo, 
+-- mostrando o código do voo e os dois nomes.
+
+-- sem ideia de onde comecar/ questao mais dificil até agr?
+
+SELECT vo.CodigoUnico as CodigoVoo,
+	   pa1.NomeCompleto as Passageiro1,
+	   pa2.NomeCompleto as Passageiro2
+	FROM Embarque em1
+		INNER JOIN Embarque AS em2
+			ON em1.IdVoo = em2.IdVoo
+		INNER JOIN Passageiro AS pa1
+			ON pa1.Id = em1.IdPassageiro
+		INNER JOIN Passageiro AS pa2
+			ON pa2.Id = em2.IdPassageiro
+		INNER JOIN Voo AS vo
+			ON vo.Id = em1.IdVoo
+	WHERE em1.IdPassageiro < em2.IdPassageiro;
+
+-- 19 Mostre os voos em que pelo menos um passageiro está usando uma classe diferente de "Economica", 
+-- trazendo o código do voo, o nome da companhia e a quantidade de bilhetes não-econômicos.
+
+-- codigo do voo / nome da companhia / quantidade de bilhetes não-economicos
+-- condicao: voo em que PELO MENOS 1 passageiro tem uma classe != economica
+
+SELECT vo.CodigoUnico as CodigoVoo,
+	   cp.Nome as NomeCompanhia,
+	   COUNT(em.Id) as QuantidadeBilhetes
+	FROM CompanhiaAerea AS cp
+		INNER JOIN Voo AS vo
+			ON vo.IdCompanhiaAerea = cp.Id
+		INNER JOIN Embarque AS em
+			ON em.IdVoo = vo.Id
+		INNER JOIN ClasseEmbarque AS cl
+			ON cl.Id = em.IdClasseEmbarque
+	WHERE cl.Nome != 'Economica'
+	GROUP BY cp.Nome, vo.CodigoUnico;
+
+-- 20 Para cada companhia aérea, mostre o código do voo de maior duração que ela opera
+-- e o seu destino (cidade e país).
+
+-- codigo de voo / cidade / pais
+-- agrupar pela companhia aerea
+-- condicao: codigo de voo com maior duracao
+
+SELECT vo.CodigoUnico as CodigoVoo,
+	   en.Cidade as Cidade,
+	   en.Pais as Pais
+	FROM Voo AS vo
+		INNER JOIN Aeroporto AS ae
+			ON ae.Id = vo.IdAeroportoDestino
+		INNER JOIN Endereco AS en
+			ON en.Id = ae.IdEndereco
+	WHERE vo.DuracaoEstimada IN (
+							  SELECT MAX(vo1.DuracaoEstimada) as MaiorDuracao
+								 FROM Voo AS vo1
+								 WHERE vo1.IdCompanhiaAerea = vo.IdCompanhiaAerea
+							);
+
+-- 21 Mostre quantos voos cada companhia aérea opera, 
+-- exibindo o nome da companhia e o total, listando inclusive companhias sem nenhum voo.
+
+-- quantidade voos cada companhia / nome companhia
+-- condicao: mostrar companhias sem nenhum voo
+
+SELECT *
+	FROM CompanhiaAerea AS cp
+		INNER JOIN 
