@@ -337,6 +337,48 @@ SELECT vo.CodigoUnico as CodigoVoo,
 -- quantidade voos cada companhia / nome companhia
 -- condicao: mostrar companhias sem nenhum voo
 
-SELECT *
-	FROM CompanhiaAerea AS cp
-		INNER JOIN 
+SELECT co.Nome as CompanhiaAerea,
+	   COUNT(vo.Id) as QuantidadeVoos
+	FROM CompanhiaAerea AS co
+		LEFT JOIN Voo AS vo
+			ON co.Id = vo.IdCompanhiaAerea
+	GROUP BY co.Nome;
+
+-- 22 Liste o número total de bilhetes emitidos por classe de embarque, em ordem decrescente de quantidade.
+
+-- quantidade total de bilhetes emitidos
+-- ordernar por classe de embarque
+
+SELECT COUNT(em.Id) as QuantidadeBilhetes,
+	   cl.Nome as ClasseEmbarque
+	FROM Embarque AS em
+		INNER JOIN ClasseEmbarque AS cl
+			ON cl.Id = em.IdClasseEmbarque
+	GROUP BY cl.Nome
+	ORDER BY QuantidadeBilhetes DESC;
+
+-- 23 Para cada cidade brasileira, exiba a quantidade de aeroportos
+-- e a quantidade total de partidas que ocorrem nelas.
+
+-- quantidade de aeroporto / quantidade total de partidas
+
+SELECT COUNT(DISTINCT ao.Id) as QuantidadeAeroportos,
+	   COUNT(vo.Id) as QuantidadeTotalPartidas,
+	   en.Cidade as NomeCidade
+	FROM Endereco AS en
+		LEFT JOIN Aeroporto AS ao
+			ON ao.IdEndereco = en.Id
+		LEFT JOIN Voo AS vo
+			ON vo.IdAeroportoOrigem = ao.Id
+	WHERE en.Pais = 'Brasil'
+	GROUP BY en.Cidade;
+
+-- 24 Mostre quantos voos partem em cada dia da semana (segunda, terça, etc.), considerando a data de partida.
+
+-- quantidade voos
+-- agrupar com DateName com weekdays
+
+SELECT DATENAME(WEEKDAY, vo.DataHoraPartida) as NomeDiaDasSemanas,
+	   COUNT(vo.Id) as QuantidadePartidas
+	FROM Voo AS vo
+	GROUP BY DATENAME(WEEKDAY, vo.DataHoraPartida);
